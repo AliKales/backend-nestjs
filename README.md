@@ -45,7 +45,7 @@ TypeORM) in favor of raw, highly-optimized SQL queries using the `pg` driver.
 ### 1. Clone the repository
 
 ```bash
-git clone [https://github.com/yourusername/appsyla-auth-nestjs.git](https://github.com/yourusername/appsyla-auth-nestjs.git)
+git clone https://github.com/AliKales/backend-nestjs.git
 cd appsyla-auth-nestjs
 npm install
 ```
