@@ -1,0 +1,7 @@
+DATABASE_URL=postgresql://user:password@localhost:5432/your_db_name
+JWT_SECRET=your_super_secret_jwt_key
+SMTP_HOST=
+SMTP_PORT=587
+SMTP_USER=your_email@domain.com
+SMTP_PASS=your_app_password
+SMTP_FROM=your_name@domain.com
