@@ -11,7 +11,7 @@ export type InsertData = Record<string, any>;
 interface UpdateParams {
     table: Tables,
     data: UpdateData,
-    where?: WhereClause,
+    where: WhereClause | null,
     returning?: Returning,
     allowedFields?: string[]
 }
@@ -48,7 +48,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
     // --- ORM METHODS ---
 
-    async select(table: Tables, where?: WhereClause, returning: Returning = '*') {
+    async select(table: Tables, where: WhereClause | null, returning: Returning = '*') {
         const selectFields = this.buildReturningString(returning, false);
         let sql = `SELECT ${selectFields} FROM ${table}`;
 
@@ -130,7 +130,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         return result;
     }
 
-    async delete(table: Tables, where?: WhereClause, returning?: Returning) {
+    async delete(table: Tables, where: WhereClause | null, returning?: Returning) {
         let sql = `DELETE FROM ${table}`;
 
         const { clause, values } = this.buildWhereClause(where);
@@ -150,7 +150,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
      * clause: "WHERE id = $1 AND status = $2"
      * values: [1, 'active']
      */
-    private buildWhereClause(where?: WhereClause, startIndex: number = 1): { clause: string, values: any[] } {
+    private buildWhereClause(where: WhereClause | null, startIndex: number = 1): { clause: string, values: any[] } {
         if (!where || Object.keys(where).length === 0) {
             return { clause: '', values: [] };
         }
