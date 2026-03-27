@@ -1,3 +1,5 @@
+import { HttpStatus } from "@nestjs/common";
+
 export enum AppErrorCode {
     // Auth Errors
     INVALID_EMAIL = 'AUTH_001',
@@ -43,4 +45,30 @@ export const ErrorMessages: Record<AppErrorCode, string> = {
     [AppErrorCode.INCORRECT_CURRENT_PASSWORD]: 'Incorrect current password.',
     [AppErrorCode.INTERNAL_ERROR]: 'An unexpected error occurred.',
     [AppErrorCode.DATABASE_ERROR]: 'A database error occurred.',
+};
+
+export const AppErrorStatus: Record<AppErrorCode, number> = {
+    // Auth Errors
+    [AppErrorCode.INVALID_EMAIL]: HttpStatus.BAD_REQUEST,            // 400
+    [AppErrorCode.INVALID_PASSWORD_FORMAT]: HttpStatus.BAD_REQUEST,  // 400
+    [AppErrorCode.PASSWORD_LENGTH]: HttpStatus.BAD_REQUEST,          // 400
+    [AppErrorCode.INVALID_CREDENTIALS]: HttpStatus.UNAUTHORIZED,     // 401
+    [AppErrorCode.INVALID_LOGIN_ATTEMPT]: HttpStatus.UNAUTHORIZED,   // 401
+    [AppErrorCode.EMAIL_ALREADY_EXISTS]: HttpStatus.CONFLICT,        // 409
+    [AppErrorCode.EMAIL_NOT_VERIFIED]: HttpStatus.FORBIDDEN,         // 403
+    [AppErrorCode.OTP_EXPIRED]: HttpStatus.GONE,                     // 410 (or 400)
+    [AppErrorCode.OTP_INVALID]: HttpStatus.BAD_REQUEST,              // 400
+    [AppErrorCode.REFRESH_TOKEN_EXPIRED]: HttpStatus.UNAUTHORIZED,   // 401
+    [AppErrorCode.REFRESH_TOKEN_INVALID]: HttpStatus.UNAUTHORIZED,   // 401
+    [AppErrorCode.INVALID_VERIFICATION_ATTEMPT]: HttpStatus.BAD_REQUEST, // 400
+
+    // User Errors
+    [AppErrorCode.USER_NOT_FOUND]: HttpStatus.NOT_FOUND,             // 404
+    [AppErrorCode.PASSWORD_SAME_AS_OLD]: HttpStatus.BAD_REQUEST,     // 400
+    [AppErrorCode.PASSWORD_CHANGE_TOO_FREQUENT]: HttpStatus.TOO_MANY_REQUESTS, // 429
+    [AppErrorCode.INCORRECT_CURRENT_PASSWORD]: HttpStatus.UNAUTHORIZED, // 401
+
+    // System Errors
+    [AppErrorCode.INTERNAL_ERROR]: HttpStatus.INTERNAL_SERVER_ERROR, // 500
+    [AppErrorCode.DATABASE_ERROR]: HttpStatus.INTERNAL_SERVER_ERROR, // 500
 };
