@@ -95,7 +95,7 @@ export class AuthService {
         const passwordHash = await bcrypt.hash(dto.password, saltRounds);
 
         try {
-            const result = await this.db.insert(Tables.USERS, { [UserCols.EMAIL]: dto.email, [UserCols.PASSWORD_HASH]: passwordHash }, [UserCols.ID, UserCols.EMAIL, UserCols.CREATED_AT]);
+            const result = await this.db.insert({ table: Tables.USERS, data: { [UserCols.EMAIL]: dto.email, [UserCols.PASSWORD_HASH]: passwordHash }, returning: [UserCols.ID, UserCols.EMAIL, UserCols.CREATED_AT] });
             const newUser = result.rows[0] as User | null | undefined;
 
             if (!newUser) {
@@ -210,7 +210,7 @@ export class AuthService {
         const saltRounds = 10;
         const passwordHash = await bcrypt.hash(new_password, saltRounds);
 
-        await this.db.update(Tables.USERS, { [UserCols.PASSWORD_HASH]: passwordHash, [UserCols.LAST_PASSWORD_CHANGE_AT]: new Date() }, { [UserCols.ID]: userId })
+        await this.db.update({ table: Tables.USERS, data: { [UserCols.PASSWORD_HASH]: passwordHash, [UserCols.LAST_PASSWORD_CHANGE_AT]: new Date() }, where: { [UserCols.ID]: userId } })
 
         // Log out all devices
         this.db.delete(Tables.REFRESH_TOKENS, { [RefreshTokenCols.USER_ID]: userId }).catch(console.error)
@@ -300,7 +300,7 @@ export class AuthService {
         if (record.otp_code !== verifyDto.otp_code) throw new AppException(AppErrorCode.OTP_INVALID, HttpStatus.UNAUTHORIZED)
         if (new Date() > record.expires_at) throw new AppException(AppErrorCode.OTP_EXPIRED, HttpStatus.UNAUTHORIZED)
 
-        await this.db.update(Tables.USERS, { [UserCols.IS_VERIFIED]: true }, { [UserCols.ID]: record.id })
+        await this.db.update({ table: Tables.USERS, data: { [UserCols.IS_VERIFIED]: true }, where: { [UserCols.ID]: record.id } })
 
         await this.deleteOTP(record.otp_id)
 
@@ -339,7 +339,7 @@ export class AuthService {
         const refreshExpiresAt = new Date()
         refreshExpiresAt.setDate(refreshExpiresAt.getDate() + 7)
 
-        await this.db.insert(Tables.REFRESH_TOKENS, { [RefreshTokenCols.TOKEN]: refreshToken, [RefreshTokenCols.USER_ID]: userId, [RefreshTokenCols.EXPIRES_AT]: refreshExpiresAt })
+        await this.db.insert({ table: Tables.REFRESH_TOKENS, data: { [RefreshTokenCols.TOKEN]: refreshToken, [RefreshTokenCols.USER_ID]: userId, [RefreshTokenCols.EXPIRES_AT]: refreshExpiresAt } })
 
         const decodedToken = this.jwtService.decode(accessToken) as { exp: number };
         const accessExpiresAt = new Date(decodedToken.exp * 1000);
@@ -362,7 +362,7 @@ export class AuthService {
         const otpCode = generateOtp();
         const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
 
-        await this.db.insert(Tables.OTPS, { [OtpCols.USER_ID]: userId, [OtpCols.OTP_CODE]: otpCode, [OtpCols.EXPIRES_AT]: expiresAt });
+        await this.db.insert({ table: Tables.OTPS, data: { [OtpCols.USER_ID]: userId, [OtpCols.OTP_CODE]: otpCode, [OtpCols.EXPIRES_AT]: expiresAt } });
 
         return {
             otp: otpCode,

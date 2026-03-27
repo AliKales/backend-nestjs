@@ -8,6 +8,21 @@ export type WhereClause = Record<string, any>;
 export type UpdateData = Record<string, any>;
 export type InsertData = Record<string, any>;
 
+interface UpdateParams {
+    table: Tables,
+    data: UpdateData,
+    where?: WhereClause,
+    returning?: Returning,
+    allowedFields?: string[]
+}
+
+interface InsertParams {
+    table: Tables,
+    data: InsertData,
+    returning?: Returning,
+    allowedFields?: string[]
+}
+
 @Injectable()
 export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     private pool: Pool;
@@ -44,36 +59,71 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         return result;
     }
 
-    async insert(table: Tables, data: InsertData, returning?: Returning) {
-        const keys = Object.keys(data);
-        const values = Object.values(data);
+    async insert(params: InsertParams) {
+        let keys = Object.keys(params.data);
+        let values = Object.values(params.data);
+
+        if (params.allowedFields && params.allowedFields.length > 0) {
+            const safeData: Record<string, any> = {};
+
+            for (const key of params.allowedFields) {
+                if (params.data[key] !== undefined) {
+                    safeData[key] = params.data[key];
+                }
+            }
+
+            keys = Object.keys(safeData);
+            values = Object.values(safeData);
+
+            if (keys.length === 0) {
+                throw new Error("no_valid_fields_provided");
+            }
+        }
 
         // Creates "$1, $2, $3"
         const placeholders = keys.map((_, index) => `$${index + 1}`).join(', ');
 
-        let sql = `INSERT INTO ${table} ("${keys.join('", "')}") VALUES (${placeholders})`;
+        let sql = `INSERT INTO ${params.table} ("${keys.join('", "')}") VALUES (${placeholders})`;
 
-        const returningClause = this.buildReturningString(returning, true);
+        const returningClause = this.buildReturningString(params.returning, true);
         if (returningClause) sql += ` ${returningClause}`;
 
         const result = await this.query(sql, values);
         return result;
     }
 
-    async update(table: Tables, data: UpdateData, where?: WhereClause, returning?: Returning) {
-        const setKeys = Object.keys(data);
-        const setValues = Object.values(data);
+
+    async update(params: UpdateParams) {
+        let setKeys = Object.keys(params.data);
+        let setValues = Object.values(params.data);
+
+        if (params.allowedFields && params.allowedFields.length > 0) {
+            const safeData: Record<string, any> = {};
+
+            for (const key of params.allowedFields) {
+                if (params.data[key] !== undefined) {
+                    safeData[key] = params.data[key];
+                }
+            }
+
+            setKeys = Object.keys(safeData);
+            setValues = Object.values(safeData);
+
+            if (setKeys.length === 0) {
+                throw new Error("no_valid_fields_provided");
+            }
+        }
 
         // Creates "column1 = $1, column2 = $2"
         const setString = setKeys.map((key, index) => `"${key}" = $${index + 1}`).join(', ');
-        let sql = `UPDATE ${table} SET ${setString}`;
+        let sql = `UPDATE ${params.table} SET ${setString}`;
 
         // Build where clause starting index after the SET variables
-        const { clause: whereClause, values: whereValues } = this.buildWhereClause(where, setValues.length + 1);
+        const { clause: whereClause, values: whereValues } = this.buildWhereClause(params.where, setValues.length + 1);
 
         if (whereClause) sql += ` ${whereClause}`;
 
-        const returningClause = this.buildReturningString(returning, true);
+        const returningClause = this.buildReturningString(params.returning, true);
         if (returningClause) sql += ` ${returningClause}`;
 
         const result = await this.query(sql, [...setValues, ...whereValues]);
