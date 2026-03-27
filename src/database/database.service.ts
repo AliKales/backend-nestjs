@@ -13,14 +13,16 @@ interface UpdateParams {
     data: UpdateData,
     where: WhereClause | null,
     returning?: Returning,
-    allowedFields?: string[]
+    allowedFields?: string[],
+    trimStrings?: boolean
 }
 
 interface InsertParams {
     table: Tables,
     data: InsertData,
     returning?: Returning,
-    allowedFields?: string[]
+    allowedFields?: string[],
+    trimStrings?: boolean
 }
 
 @Injectable()
@@ -67,8 +69,12 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
             const safeData: Record<string, any> = {};
 
             for (const key of params.allowedFields) {
-                if (params.data[key] !== undefined) {
-                    safeData[key] = params.data[key];
+                if (params.trimStrings === true && params.data[key] !== undefined) {
+                    if (typeof params.data[key] === "string") {
+                        safeData[key] = params.data[key].trim();
+                    } else {
+                        safeData[key] = params.data[key];
+                    }
                 }
             }
 
@@ -78,6 +84,14 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
             if (keys.length === 0) {
                 throw new Error("no_valid_fields_provided");
             }
+        } else if (params.trimStrings === true) {
+            values = values.map((e) => {
+                if (typeof e === "string") {
+                    return e.toString()
+                }
+
+                return e
+            })
         }
 
         // Creates "$1, $2, $3"
@@ -102,7 +116,11 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
             for (const key of params.allowedFields) {
                 if (params.data[key] !== undefined) {
-                    safeData[key] = params.data[key];
+                    if (params.trimStrings === true && typeof params.data[key] === "string") {
+                        safeData[key] = params.data[key].trim();
+                    } else {
+                        safeData[key] = params.data[key];
+                    }
                 }
             }
 
@@ -112,6 +130,14 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
             if (setKeys.length === 0) {
                 throw new Error("no_valid_fields_provided");
             }
+        } else if (params.trimStrings === true) {
+            setValues = setValues.map((e) => {
+                if (typeof e === "string") {
+                    return e.toString()
+                }
+
+                return e
+            })
         }
 
         // Creates "column1 = $1, column2 = $2"
