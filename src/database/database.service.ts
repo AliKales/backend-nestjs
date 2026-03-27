@@ -87,7 +87,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         } else if (params.trimStrings === true) {
             values = values.map((e) => {
                 if (typeof e === "string") {
-                    return e.toString()
+                    return e.trim()
                 }
 
                 return e
@@ -133,7 +133,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         } else if (params.trimStrings === true) {
             setValues = setValues.map((e) => {
                 if (typeof e === "string") {
-                    return e.toString()
+                    return e.trim()
                 }
 
                 return e
